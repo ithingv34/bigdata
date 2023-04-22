@@ -218,4 +218,4 @@ helm upgrade --install airflow apache-airflow/airflow -n airflow  \
 
 - 리스트에 없는 `apache-airflow-providers-apache-spark==2.0.0` 패키지를 Docker Image를 
 ---
-### GCS와 다른 GCP 서비스를 통합하기
+### GCS와 다른 GCP 서비스를 통합하기 
