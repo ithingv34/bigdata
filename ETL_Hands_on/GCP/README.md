@@ -227,9 +227,8 @@ image:
 - gcloud 쉘에서 도커 이미지를 저장할 저장소를 생성
   
 ```bash
-# Docker 클라이언트가 GCP Artifact Registry에 로그인
-$ gcloud auth configure-docker [region]-docker.pkg.dev
-이 명령어는 Docker 클라이언트가 GCP Artifact Registry에 로그인 할 수 있도록 합니다. configure-docker는 Docker에 대한 인증 정보를 구성하는 명령어이며, europe-west4-docker.pkg.dev는 GCP Artifact Registry의 호스팅 이름입니다.
+# GCP Artifact Registry에 로그인을 위한 docker client 인증파일 생성
+$ gcloud auth configure-docker us-central1-docker.pkg.dev
 
 # airflow-gke라는 이름으로 Docker 이미지 저장소를 생성
 $ gcloud artifacts repositories create airflow-gke \        
@@ -244,7 +243,7 @@ $ gcloud artifacts repositories create airflow-gke \
 2. 새로운 도커 이미지 빌드 후 `Artifact Registry`로 배포
 
  - 현재 실행 중인 airflow 컨테이너의 provider 목록을 확인
- <img src="./../../image/21.png">
+ <img src="./../../image/22.png">
  
  - `Dockerfile` 파일 생성
     ```bash
