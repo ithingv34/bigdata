@@ -6,8 +6,6 @@
 - GCP LoadBalancer를 통해 Airflow webserver 포트 노출
 - Git-sync 기능을 사용하여  Airlow Dag를 자동으로 동기화 설정
 - Artifact Registry로 Airflow 의존성 관리
-- GCS와 다른 GCP 서비스를 통합하기
-
 
 ----
 ### GKE에 쿠버네티스 클러스터 설치
@@ -46,7 +44,6 @@ kubeconfig entry generated for cluster-1.
 - 도중 gke-gcloud-auth-plugin 관련한 에러가 난다면 [이 문서](https://github.com/actions/runner-images/issues/6778)를 참고
 ---
 
----
 ### Helm을 사용하여 Airflow 배포 및 설정
 
 ```bash
@@ -88,10 +85,10 @@ $ helm upgrade --install airflow apache-airflow/airflow -n airflow --debug
 
 - 외부에서 웹서버에 접속할 수 있도록 포트포워딩 설정
 ```bash
-# 
 $ kubectl port-forward svc/airflow-webserver 8080:8080 --namespace airflow
 ```
-- admin/admin을 입력해 로그인을 완료하면 이 화면을 볼 수 있다
+- 로그인을 완료하면 이 화면을 볼 수 있다
+  - id: `admin`, pw: `admin`
 <img src="./../../image/14.png">
 
 ---
@@ -106,12 +103,12 @@ ClusterIP Type의 서비스는 외부의 요청을 적합한 파드로 라우팅
 helm show values apache-airflow/airflow > values.yaml
 ```
 - CluterIP -> LoadBalancer로 변경
-<img src="./../../image/15.png>
+<img src="./../../image/15.png">
 
+
+- helm 업그레이드
 ```bash
-helm upgrade --install airflow apache-airflow/airflow -n airflow  \
-  -f values.yaml \
-  --debug
+helm upgrade --install airflow apache-airflow/airflow -n airflow  -f values.yaml --debug
 ```
 - GKE의 Services & Ingress 탭에 들어가보면 서비스 타입이 클러스터 IP 에서 외부 부하 분산기로 변경된 것을 확인할 수 있다.
 <img src="./../../image/16.png">
@@ -127,12 +124,12 @@ helm upgrade --install airflow apache-airflow/airflow -n airflow  \
   - 변경 사항을 webserver 웹서버에서 확인하기
 
 
-- github repository 생성 및 ssh 키 설정
+1. github repository 생성 및 ssh 키 설정
 
   - dag를 저장할 github 저장소를 생성하고 저장소 settings의 Deploy keys에서 생성한 ssh 공개키를 등록한다.
     <img src="./../../image/17.png">
 
-- dag 폴더 생성 후 저장소에 push 하기
+2. dag 폴더 생성 후 저장소에 push 하기
     - 테스트를 위해 dags 폴더 아래에 간단한 dag를 작성하고 저장소에 push한다.
     ```python
     from airflow import DAG
@@ -166,7 +163,7 @@ helm upgrade --install airflow apache-airflow/airflow -n airflow  \
     
 
 
-- airflow와 git-sync 를 위한 쿠버네티스 Secret 오브젝트 생성
+3.  airflow와 git-sync 를 위한 쿠버네티스 Secret 오브젝트 생성
     ```bash
     # airflow webserver pod를 찾기
     $ kubectl get pods -n airflow
@@ -178,7 +175,7 @@ helm upgrade --install airflow apache-airflow/airflow -n airflow  \
     $ kubectl get secrets -n airflow
     ```
 
-- `values.yaml` 파일에 `gitSync` 의 내용을 수정
+4.  `values.yaml` 파일에 `gitSync` 의 내용을 수정
     - helm 배포를 위해 아래 내용을 변경해준다.
     ```bash
     gitSync:
@@ -196,7 +193,7 @@ helm upgrade --install airflow apache-airflow/airflow -n airflow  \
     # helm 배포
     $ helm upgrade --install airflow apache-airflow/airflow -n airflow -f values.yaml --debug
     ``` 
-- 변경 사항을 webserver 웹서버에서 확인하기
+5. 변경 사항을 webserver 웹서버에서 확인하기
     - pod를 조회하면 scheduler pod의 개수가 2 -> 3개로 변경됐음을 알 수 있다.
     <img src="./../../image/21.png">
     - 이제 webserver에 접속하면 새로 등록된 dag를 확인할 수 있다.
@@ -204,18 +201,105 @@ helm upgrade --install airflow apache-airflow/airflow -n airflow  \
 ---
 ### Artifact Registry로 Airflow 의존성 관리
 
-- 이번 파트는 docker를 활용하기 때문에 docker를 미리 설치해야한다.
-    - [도커 설치 문서](https://docs.docker.com/engine/install/)
+- 이번 파트는 docker를 사용하기 때문에 미리 docker 클라이언트를 설치해야한다.
 
-- helm을 사용해 설치된 airflow 의존성 리스트를 먼저 확인해보자
+`Helm`을 사용하여 쿠버네티스 클러스터에 애플리케이션을 배포할 때 `values.yaml` 파일을 사용하여 애플리케이션 구성을 정의한다. 애플리케이션의 Docker 이미지를 변경하려면 `values.yaml` 파일에서 이미지를 참조하는 값을 수정해야 한다.
+
+```bash
+# values.yaml 파일 중
+image:
+  repository: apache/airflow
+  tag: 2.5.3
+```
+- `repository`와 `tag` 값은 Docker Hub에서 다운로드할 Airflow 이미지의 이름과 태그이다. 
+- 새로운 이미지를 사용하려면, `repository`와 `tag` 값을 새로운 이미지의 이름과 태그로 변경해야한다. 
+- 변경된 values.yaml 파일을 사용하여 Helm 차트를 업그레이드하면, Kubernetes 클러스터 내에서 새로운 Docker 이미지가 배포된다.
+- 이를 위해 다음의 작업이 필요하다.
+  - Docker Image 저장하고 배포하기 위한 플랫폼 중 하나인 `GCP Artifact Registry` 사용 설정하기, 비슷한 도구로 `AWS ECR`, `Harbor`, `Quay` 등이 있음
+  - 새로운 도커 이미지 빌드 후 `Artifact Registry`로 배포
+  - `values.yaml` 수정 후 Helm 업그레이드
+  - 실행 중인 Pod에서 추가된 의존성 확인  
+
+1. Docker Image 저장하고 배포하기 위한 플랫폼 중 하나인 `GCP Artifact Registry` 사용 설정 
+  - [Artifact Registry API를 사용 설정](https://cloud.google.com/artifact-registry?hl=ko)
+  <img src="./../../image/23.png">
+  - gcloud 쉘에서 도커 이미지를 저장할 저장소를 생성
+  ```bash
+  # Docker 클라이언트가 GCP Artifact Registry에 로그인
+  $ gcloud auth configure-docker [region]-docker.pkg.dev
+    이 명령어는 Docker 클라이언트가 GCP Artifact Registry에 로그인 할 수 있도록 합니다. configure-docker는 Docker에 대한 인증 정보를 구성하는 명령어이며, europe-west4-docker.pkg.dev는 GCP Artifact Registry의 호스팅 이름입니다.
+
+  # airflow-gke라는 이름으로 Docker 이미지 저장소를 생성
+  $ gcloud artifacts repositories create airflow-gke \        
+    --repository-format=docker \
+    --location=us-central1 \
+    --description="새로운 Airflow 이미지를 위한 docker 저장소" 
+  ```
+  - 생성된 저장소 확인하기
+    <img src="./../../image/24.png">
+
+2. 새로운 도커 이미지 빌드 후 `Artifact Registry`로 배포
+
+ - 현재 실행 중인 airflow 컨테이너의 provider 목록을 확인
+ <img src="./../../image/21.png">
+ 
+ - `Dockerfile` 파일 생성
+    ```bash
+    # Dockerfile
+    FROM apache/airflow:2.5.3
+
+    WORKDIR ${AIRFLOW_HOME}
+
+    COPY requirements.txt .
+
+    RUN pip3 install -r requirements.txt
+    ``` 
+ - `requirements.txt` 파일 생성
+    - 테스트를 위해 mongodb provider를 설치 
+    ```bash
+    apache-airflow-providers-mongo==3.1.1
+    ```
+ - 현재 디렉토리 구조는 다음과 같다.
+    ```bash
+        .
+        ├── Dockerfile
+        ├── dags
+        │   └── helloworld.py
+        ├── requirements.txt
+        └── values.yaml
+    ```
+  - 이미지 빌드 후 배포
+    - `artifact-registry`에 도커 이미지를 배포하기 위해서 이름을 템플릿에 맞게 지정해야 한다.
+    - `<region>-<docker>-pkg.dev`/`project-id`/`저장소 이름`/`이름:태그`
+    ```bash
+    # 빌드
+    $ docker build -t us-central1-docker.pkg.dev/engaged-aviary-384322/airflow-gke/airflow-plugins-dependencies:1.0.0 .
+
+    # 푸쉬
+    $ docker push us-central1-docker.pkg.dev/engaged-aviary-384322/airflow-gke/airflow-plugins-dependencies:1.0.0
+    ```
+  - 결과 확인
+     <img src="./../../image/25.png">  
+
+3. `values.yaml` 수정 후 Helm 업그레이드
+
+  - 수정된 도커 이미지를 사용하도록 `values.yaml` 파일을 수정해야한다.
+
+    <img src="./../../image/27.png">
+  - Helm upgrade 
+    ```bash
+    $ helm upgrade --install airflow apache-airflow/airflow -n airflow  -f values.yaml --debug
+    ```
+
+
+4. 실행 중인 Pod에서 추가된 의존성 확인 
+
+- airflow 의존성 리스트를 확인하기
   ```bash
   # webserver pod 확인
   $ kubectl get pods -n airflow
     airflow-webserver-8bb484c7-tk8pj     1/1     Running   0          79m
   $ kubectl exec airflow-webserver-8bb484c7-tk8pj -n airflow -- airflow providers list 
   ``` 
-  <img src="./../../image/22.png">
-
-- 리스트에 없는 `apache-airflow-providers-apache-spark==2.0.0` 패키지를 Docker Image를 
----
-### GCS와 다른 GCP 서비스를 통합하기 
+- 이제 mongodb provider를 사용할 수 있다.
+  <img src="./../../image/26.png">
