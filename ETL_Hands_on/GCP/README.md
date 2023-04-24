@@ -221,21 +221,24 @@ image:
   - 실행 중인 Pod에서 추가된 의존성 확인  
 
 1. Docker Image 저장하고 배포하기 위한 플랫폼 중 하나인 `GCP Artifact Registry` 사용 설정 
-  - [Artifact Registry API를 사용 설정](https://cloud.google.com/artifact-registry?hl=ko)
+  
+- [Artifact Registry API를 사용 설정](https://cloud.google.com/artifact-registry?hl=ko)
   <img src="./../../image/23.png">
-  - gcloud 쉘에서 도커 이미지를 저장할 저장소를 생성
-  ```bash
-  # Docker 클라이언트가 GCP Artifact Registry에 로그인
-  $ gcloud auth configure-docker [region]-docker.pkg.dev
-    이 명령어는 Docker 클라이언트가 GCP Artifact Registry에 로그인 할 수 있도록 합니다. configure-docker는 Docker에 대한 인증 정보를 구성하는 명령어이며, europe-west4-docker.pkg.dev는 GCP Artifact Registry의 호스팅 이름입니다.
+- gcloud 쉘에서 도커 이미지를 저장할 저장소를 생성
+  
+```bash
+# Docker 클라이언트가 GCP Artifact Registry에 로그인
+$ gcloud auth configure-docker [region]-docker.pkg.dev
+이 명령어는 Docker 클라이언트가 GCP Artifact Registry에 로그인 할 수 있도록 합니다. configure-docker는 Docker에 대한 인증 정보를 구성하는 명령어이며, europe-west4-docker.pkg.dev는 GCP Artifact Registry의 호스팅 이름입니다.
 
-  # airflow-gke라는 이름으로 Docker 이미지 저장소를 생성
-  $ gcloud artifacts repositories create airflow-gke \        
-    --repository-format=docker \
-    --location=us-central1 \
-    --description="새로운 Airflow 이미지를 위한 docker 저장소" 
-  ```
-  - 생성된 저장소 확인하기
+# airflow-gke라는 이름으로 Docker 이미지 저장소를 생성
+$ gcloud artifacts repositories create airflow-gke \        
+--repository-format=docker \
+--location=us-central1 \
+--description="새로운 Airflow 이미지를 위한 docker 저장소" 
+```
+
+- 생성된 저장소 확인하기
     <img src="./../../image/24.png">
 
 2. 새로운 도커 이미지 빌드 후 `Artifact Registry`로 배포
