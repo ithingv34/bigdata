@@ -18,8 +18,11 @@ echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb
 # 업데이트
 sudo apt update
 
+# mongosh 설치
+$ sudo apt-get install -y mongodb-mongosh
+
 # mongodb connect
-$ mongosh "mongodb+srv://cluster0.uvvyu7p.mongodb.net/mydb" --apiVersion 1 --username admin
+$ mongosh "mongodb+srv://cluster0.uvvyu7p.mongodb.net/mydb" --apiVersion 1
 
 # db 사용
 $ [primary] mydb> use mydb
