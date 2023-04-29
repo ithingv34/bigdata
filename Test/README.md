@@ -121,7 +121,7 @@ with DAG(
 ### Unit testing in Airflow
 
 - `BashOperator`를 테스트할 때는 실행 결과의 로그를 확인하여 실행이 제대로 이루어졌는지 확인할 수 있다.
-- z 
+- 
 
 ```python
 def test_bash_operator():
